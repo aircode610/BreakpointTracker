@@ -51,6 +51,16 @@ class BreakpointTrackingService(private val project: Project) {
     }
 
     /**
+     * Adds a breakpoint to the tracking maps.
+     *
+     * @param breakpoint The breakpoint to add
+     */
+    fun addBreakpoint(breakpoint: XBreakpoint<*>) {
+        addBreakpointToMap(breakpoint)
+        LOG.debug("Added breakpoint. Total count: ${getTotalBreakpoints()}")
+    }
+
+    /**
      * Removes a breakpoint from the tracking maps.
      *
      * @param breakpoint The breakpoint to remove
@@ -117,7 +127,7 @@ class BreakpointTrackingService(private val project: Project) {
     fun updateBreakpoint(breakpoint: XBreakpoint<*>) {
         // For changes, we need to remove old entry and add new one
         removeBreakpoint(breakpoint)
-        addBreakpointToMap(breakpoint)
+        addBreakpoint(breakpoint)
         LOG.debug("Updated breakpoint")
     }
 
