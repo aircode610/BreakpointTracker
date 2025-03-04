@@ -197,26 +197,26 @@ class BreakpointTrackingService(private val project: Project) {
 
     /**
      * Returns the line breakpoint data with shortened file paths for display.
-     *
-     * @return Map of shortened file paths to lists of line numbers
+     * Converts 0-based line numbers to 1-based for display.
      */
     fun getLineBreakpointDisplayData(): Map<String, List<Int>> {
         return lineBreakpoints.entries.associate { (path, lines) ->
             // Extract just the filename for display purposes
             val filename = path.substringAfterLast('/')
-            filename to lines.toList().sorted()
+            // Convert 0-based line numbers to 1-based by adding 1 to each
+            filename to lines.map { it + 1 }.sorted()
         }
     }
 
     /**
      * Returns the line breakpoint data with file path and convenient display format.
-     *
-     * @return Map of file paths to formatted line information
+     * Converts 0-based line numbers to 1-based for display.
      */
     fun getLineBreakpointDetailedData(): Map<String, String> {
         return lineBreakpoints.entries.associate { (path, lines) ->
             val filename = path.substringAfterLast('/')
-            val sortedLines = lines.sorted()
+            // Convert to 1-based line numbers
+            val sortedLines = lines.map { it + 1 }.sorted()
             val linesText = when {
                 sortedLines.isEmpty() -> "No breakpoints"
                 sortedLines.size == 1 -> "Line: ${sortedLines[0]}"
