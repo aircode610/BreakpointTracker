@@ -19,7 +19,7 @@ intellij {
 
     plugins.set(listOf(
         "com.intellij.java",
-        "com.jetbrains.kotlin"
+        "org.jetbrains.kotlin"
     ))
 }
 
