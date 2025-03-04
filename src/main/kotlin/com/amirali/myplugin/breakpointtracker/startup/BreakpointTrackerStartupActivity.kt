@@ -2,11 +2,11 @@ package com.amirali.myplugin.breakpointtracker.startup
 
 import com.amirali.myplugin.breakpointtracker.listeners.BreakpointChangeListener
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.StartupActivity
+import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.xdebugger.breakpoints.XBreakpointListener
 
-class BreakpointTrackerStartupActivity : StartupActivity {
-    override fun runActivity(project: Project) {
+class BreakpointTrackerStartupActivity : ProjectActivity {
+    override suspend fun execute(project: Project) {
         // Create our listener
         val listener = BreakpointChangeListener(project)
 

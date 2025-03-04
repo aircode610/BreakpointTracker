@@ -28,6 +28,9 @@
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
 
+        <!-- Project Startup Listener -->
+        <postStartupActivity implementation="com.amirali.myplugin.breakpointtracker.startup.BreakpointTrackerStartupActivity"/>
+
     </extensions>
 
 </idea-plugin>
