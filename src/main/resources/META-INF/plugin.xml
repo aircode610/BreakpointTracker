@@ -31,6 +31,13 @@
         <!-- Project Startup Listener -->
         <postStartupActivity implementation="com.amirali.myplugin.breakpointtracker.startup.BreakpointTrackerStartupActivity"/>
 
+        <!-- Tool Window -->
+        <toolWindow id="Breakpoints"
+                    secondary="true"
+                    icon="AllIcons.Debugger.Db_set_breakpoint"
+                    anchor="right"
+                    factoryClass="com.amirali.myplugin.breakpointtracker.ui.BreakpointToolWindowFactory"/>
+
     </extensions>
 
 </idea-plugin>
