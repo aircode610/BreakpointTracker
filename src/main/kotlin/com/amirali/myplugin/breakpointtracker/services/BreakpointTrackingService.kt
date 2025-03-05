@@ -11,17 +11,16 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Service responsible for tracking all types of breakpoints across the project.
- * Maintains separate data structures for line breakpoints and other types.
+ * Service responsible for tracking all breakpoints in the project.
  */
 @Service(Service.Level.PROJECT)
 class BreakpointTrackingService(private val project: Project) {
     private val LOG = Logger.getInstance(BreakpointTrackingService::class.java)
 
-    // Map of file path to list of line numbers for line breakpoints
+    // Map to store line breakpoints and their lines
     private val lineBreakpoints = ConcurrentHashMap<String, MutableList<Int>>()
 
-    // Map of breakpoint type to count for non-line breakpoints
+    // Map to store non-line breakpoints and their count
     private val otherBreakpoints = ConcurrentHashMap<String, AtomicInteger>()
 
     init {
@@ -31,16 +30,13 @@ class BreakpointTrackingService(private val project: Project) {
 
     /**
      * Loads all existing breakpoints from the project.
-     * Called once during service initialization.
      */
     private fun loadExistingBreakpoints() {
         val breakpointManager = XDebuggerManager.getInstance(project).breakpointManager
 
-        // Clear existing data to ensure a clean state
         lineBreakpoints.clear()
         otherBreakpoints.clear()
 
-        // Get all breakpoints
         val allBreakpoints = breakpointManager.allBreakpoints
 
         for (breakpoint in allBreakpoints) {
@@ -86,10 +82,8 @@ class BreakpointTrackingService(private val project: Project) {
                 val line = breakpoint.line
 
                 lineBreakpoints[filePath]?.let { lines ->
-                    // Remove the specific line
                     lines.remove(line)
 
-                    // If no more breakpoints in this file, remove the file entry
                     if (lines.isEmpty()) {
                         lineBreakpoints.remove(filePath)
                     }
@@ -106,10 +100,8 @@ class BreakpointTrackingService(private val project: Project) {
     private fun removeOtherBreakpoint(breakpoint: XBreakpoint<*>) {
         val typeId = breakpoint.type.id
         otherBreakpoints[typeId]?.let { counter ->
-            // Decrement the counter
             val count = counter.decrementAndGet()
 
-            // If count reaches 0, remove the type entry
             if (count <= 0) {
                 otherBreakpoints.remove(typeId)
             }
@@ -120,12 +112,10 @@ class BreakpointTrackingService(private val project: Project) {
 
     /**
      * Updates an existing breakpoint in the tracking maps.
-     * This is called when a breakpoint's properties change.
      *
      * @param breakpoint The breakpoint that was changed
      */
     fun updateBreakpoint(breakpoint: XBreakpoint<*>) {
-        // For changes, we need to remove old entry and add new one
         removeBreakpoint(breakpoint)
         addBreakpoint(breakpoint)
         LOG.debug("Updated breakpoint")
@@ -154,10 +144,8 @@ class BreakpointTrackingService(private val project: Project) {
                 val filePath = file.path
                 val line = breakpoint.line
 
-                // Get or create file entry
                 val lines = lineBreakpoints.getOrPut(filePath) { ArrayList() }
 
-                // Add line if it doesn't already exist
                 if (!lines.contains(line)) {
                     lines.add(line)
                     LOG.debug("Added line breakpoint at $filePath:$line")
@@ -176,7 +164,6 @@ class BreakpointTrackingService(private val project: Project) {
     private fun addOtherBreakpoint(breakpoint: XBreakpoint<*>) {
         val typeId = breakpoint.type.id
 
-        // Get or create counter for this type and increment it
         val counter = otherBreakpoints.getOrPut(typeId) { AtomicInteger(0) }
         val newCount = counter.incrementAndGet()
 
@@ -189,7 +176,6 @@ class BreakpointTrackingService(private val project: Project) {
      * @return Map of file paths to lists of line numbers
      */
     fun getLineBreakpointData(): Map<String, List<Int>> {
-        // Return an immutable copy to prevent external modification
         return lineBreakpoints.mapValues { (_, lines) ->
             lines.toList().sorted()
         }
@@ -201,9 +187,7 @@ class BreakpointTrackingService(private val project: Project) {
      */
     fun getLineBreakpointDisplayData(): Map<String, List<Int>> {
         return lineBreakpoints.entries.associate { (path, lines) ->
-            // Extract just the filename for display purposes
             val filename = path.substringAfterLast('/')
-            // Convert 0-based line numbers to 1-based by adding 1 to each
             filename to lines.map { it + 1 }.sorted()
         }
     }
@@ -215,7 +199,7 @@ class BreakpointTrackingService(private val project: Project) {
     fun getLineBreakpointDetailedData(): Map<String, String> {
         return lineBreakpoints.entries.associate { (path, lines) ->
             val filename = path.substringAfterLast('/')
-            // Convert to 1-based line numbers
+
             val sortedLines = lines.map { it + 1 }.sorted()
             val linesText = when {
                 sortedLines.isEmpty() -> "No breakpoints"

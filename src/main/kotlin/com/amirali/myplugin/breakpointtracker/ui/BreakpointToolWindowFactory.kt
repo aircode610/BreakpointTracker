@@ -8,18 +8,18 @@ import com.intellij.ui.content.ContentFactory
 class BreakpointToolWindowFactory : ToolWindowFactory {
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        // Create our browser panel
+        // Creat browser panel
         val breakpointPanel = BreakpointBrowserPanel(project)
 
-        // Create a content element from our panel
+        // Create content
         val contentFactory = ContentFactory.getInstance()
         val content = contentFactory.createContent(
             breakpointPanel.component,
-            "Breakpoints",
+            "Breakpoint Tracker",
             false
         )
 
-        // Add the content to the tool window
+        // Add content to tool window
         toolWindow.contentManager.addContent(content)
     }
 }

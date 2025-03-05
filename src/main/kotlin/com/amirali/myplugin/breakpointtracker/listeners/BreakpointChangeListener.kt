@@ -8,7 +8,7 @@ import com.intellij.xdebugger.breakpoints.XBreakpoint
 import com.intellij.xdebugger.breakpoints.XBreakpointListener
 
 /**
- * Listens for breakpoint events and updates the BreakpointTrackingService accordingly.
+ * Breakpoint listener which updates the tracking service.
  */
 class BreakpointChangeListener(private val project: Project) : XBreakpointListener<XBreakpoint<*>> {
 
