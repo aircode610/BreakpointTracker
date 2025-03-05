@@ -160,6 +160,13 @@
                     }
                 }
             }
+
+            document.addEventListener('DOMContentLoaded', function() {
+                // Signal to Kotlin that the page is ready
+                if (window.jcefReady) {
+                    window.jcefReady();
+                }
+            });
         </script>
     </body>
 </html>

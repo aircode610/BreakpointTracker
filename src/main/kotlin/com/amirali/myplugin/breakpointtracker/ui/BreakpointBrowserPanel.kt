@@ -1,18 +1,21 @@
 package com.amirali.myplugin.breakpointtracker.ui
 
 import com.amirali.myplugin.breakpointtracker.services.BreakpointTrackingService
+import com.amirali.myplugin.breakpointtracker.topics.BreakpointUIListener
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.jcef.JBCefBrowser
 import java.awt.BorderLayout
 import javax.swing.JComponent
 import javax.swing.JPanel
-import javax.swing.Timer
 import com.google.gson.Gson
 import com.intellij.ui.JBColor
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
+import org.cef.browser.CefBrowser
+import org.cef.browser.CefFrame
+import org.cef.handler.CefLoadHandlerAdapter
 
 class BreakpointBrowserPanel(private val project: Project) {
     // JCEF browser component
@@ -27,7 +30,25 @@ class BreakpointBrowserPanel(private val project: Project) {
     // JSON serializer
     private val gson = Gson()
 
-    private val updateTimer: Timer
+    // Getter for the Swing component
+    val component: JComponent get() = panel
+
+    // Breakpoint UI listener
+    private val breakpointListener = object : BreakpointUIListener {
+        override fun breakpointsChanged() {
+            if (browserReady) {
+                updateContent()
+            } else {
+                pendingUpdate = true
+            }
+        }
+    }
+
+    // Add a flag to track if the browser is ready
+    private var browserReady = false
+
+    // Add a flag to track if we need to update when ready
+    private var pendingUpdate = false
 
     // Initialize the panel
     init {
@@ -35,15 +56,41 @@ class BreakpointBrowserPanel(private val project: Project) {
 
         loadHtmlContent()
 
-        updateTimer = Timer(1000) { updateContent() }
-        updateTimer.start()
+        val connection = project.messageBus.connect()
+        connection.subscribe(BreakpointUIListener.TOPIC, breakpointListener)
+
+        // We'll update the content once the browser is ready instead of doing it immediately
+        pendingUpdate = true
     }
 
-    // Getter for the Swing component
-    val component: JComponent get() = panel
+    // Add this method to handle browser ready state
+    private fun setupBrowserCallbacks() {
+        jbCefBrowser.jbCefClient.addLoadHandler(object : CefLoadHandlerAdapter() {
+            override fun onLoadEnd(browser: CefBrowser, frame: CefFrame, httpStatusCode: Int) {
+                // This gets called when the page finishes loading
+                browserReady = true
+
+                // Add a JavaScript callback that can be called from the HTML
+                jbCefBrowser.cefBrowser.executeJavaScript("""
+                    window.jcefReady = function() {
+                        // Do any initialization here
+                        console.log("Browser is ready!");
+                    };
+                """.trimIndent(), jbCefBrowser.cefBrowser.url, 0)
+
+                // Check if we need to update the content
+                if (pendingUpdate) {
+                    updateContent()
+                    pendingUpdate = false
+                }
+            }
+        }, jbCefBrowser.cefBrowser)
+    }
 
     // Load the initial HTML content
     private fun loadHtmlContent() {
+        setupBrowserCallbacks()
+
         val htmlTemplate = loadResourceAsString("/com/amirali/myplugin/breakpointtracker/ui/breakpoint_tracker.html")
 
         val htmlContent = htmlTemplate
@@ -69,6 +116,11 @@ class BreakpointBrowserPanel(private val project: Project) {
 
     // Update the content with the latest breakpoint data
     private fun updateContent() {
+        if (!browserReady) {
+            pendingUpdate = true
+            return
+        }
+
         val data = mapOf(
             "totalCount" to breakpointService.getTotalBreakpoints(),
             "lineCount" to breakpointService.getLineBreakpointCount(),

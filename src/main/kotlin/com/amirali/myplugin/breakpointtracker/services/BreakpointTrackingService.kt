@@ -1,5 +1,6 @@
 package com.amirali.myplugin.breakpointtracker.services
 
+import com.amirali.myplugin.breakpointtracker.topics.BreakpointUIListener
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
@@ -26,6 +27,7 @@ class BreakpointTrackingService(private val project: Project) {
     init {
         LOG.info("Initializing BreakpointTrackingService")
         loadExistingBreakpoints()
+        notifyUIOfChanges()
     }
 
     /**
@@ -54,6 +56,7 @@ class BreakpointTrackingService(private val project: Project) {
     fun addBreakpoint(breakpoint: XBreakpoint<*>) {
         addBreakpointToMap(breakpoint)
         LOG.debug("Added breakpoint. Total count: ${getTotalBreakpoints()}")
+        notifyUIOfChanges()
     }
 
     /**
@@ -67,6 +70,7 @@ class BreakpointTrackingService(private val project: Project) {
         } else {
             removeOtherBreakpoint(breakpoint)
         }
+        notifyUIOfChanges()
     }
 
     /**
@@ -168,6 +172,13 @@ class BreakpointTrackingService(private val project: Project) {
         val newCount = counter.incrementAndGet()
 
         LOG.debug("Added $typeId breakpoint. Total: $newCount")
+    }
+
+    /**
+     * Notifies UI listeners that breakpoints have changed.
+     */
+    private fun notifyUIOfChanges() {
+        project.messageBus.syncPublisher(BreakpointUIListener.TOPIC).breakpointsChanged()
     }
 
     /**
