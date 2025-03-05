@@ -7,10 +7,10 @@ import com.intellij.xdebugger.breakpoints.XBreakpointListener
 
 class BreakpointTrackerStartupActivity : ProjectActivity {
     override suspend fun execute(project: Project) {
-        // Create our listener
+        // Create listener
         val listener = BreakpointChangeListener(project)
 
-        // Connect to the project's message bus
+        // Connecting to the message bus
         val messageBus = project.messageBus
         val connection = messageBus.connect()
 

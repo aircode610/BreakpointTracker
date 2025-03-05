@@ -51,4 +51,12 @@ tasks {
     publishPlugin {
         token.set(System.getenv("PUBLISH_TOKEN"))
     }
+
+    processResources {
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+
+        from("src/main/resources") {
+            include("**/*.*")
+        }
+    }
 }
