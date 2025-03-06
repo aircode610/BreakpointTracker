@@ -59,18 +59,18 @@ class BreakpointBrowserPanel(private val project: Project) {
         val connection = project.messageBus.connect()
         connection.subscribe(BreakpointUIListener.TOPIC, breakpointListener)
 
-        // We'll update the content once the browser is ready instead of doing it immediately
+        // Update content
         pendingUpdate = true
     }
 
-    // Add this method to handle browser ready state
+    // Browser ready state
     private fun setupBrowserCallbacks() {
         jbCefBrowser.jbCefClient.addLoadHandler(object : CefLoadHandlerAdapter() {
             override fun onLoadEnd(browser: CefBrowser, frame: CefFrame, httpStatusCode: Int) {
-                // This gets called when the page finishes loading
+                // Page is ready
                 browserReady = true
 
-                // Add a JavaScript callback that can be called from the HTML
+                // JavaScript callback
                 jbCefBrowser.cefBrowser.executeJavaScript("""
                     window.jcefReady = function() {
                         // Do any initialization here
@@ -78,7 +78,6 @@ class BreakpointBrowserPanel(private val project: Project) {
                     };
                 """.trimIndent(), jbCefBrowser.cefBrowser.url, 0)
 
-                // Check if we need to update the content
                 if (pendingUpdate) {
                     updateContent()
                     pendingUpdate = false
