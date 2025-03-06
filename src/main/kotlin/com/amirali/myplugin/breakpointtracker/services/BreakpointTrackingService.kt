@@ -31,6 +31,13 @@ class BreakpointTrackingService(private val project: Project) {
     }
 
     /**
+     * Notifies UI listeners that breakpoints have changed.
+     */
+    private fun notifyUIOfChanges() {
+        project.messageBus.syncPublisher(BreakpointUIListener.TOPIC).breakpointsChanged()
+    }
+
+    /**
      * Loads all existing breakpoints from the project.
      */
     private fun loadExistingBreakpoints() {
@@ -71,47 +78,6 @@ class BreakpointTrackingService(private val project: Project) {
             removeOtherBreakpoint(breakpoint)
         }
         notifyUIOfChanges()
-    }
-
-    /**
-     * Removes a line breakpoint from the tracking map.
-     */
-    private fun removeLineBreakpoint(breakpoint: XLineBreakpoint<*>) {
-        val fileUrl = breakpoint.fileUrl
-        if (fileUrl != null) {
-            val file = VirtualFileManager.getInstance().findFileByUrl(fileUrl)
-
-            if (file != null) {
-                val filePath = file.path
-                val line = breakpoint.line
-
-                lineBreakpoints[filePath]?.let { lines ->
-                    lines.remove(line)
-
-                    if (lines.isEmpty()) {
-                        lineBreakpoints.remove(filePath)
-                    }
-
-                    LOG.debug("Removed line breakpoint at $filePath:$line")
-                }
-            }
-        }
-    }
-
-    /**
-     * Removes a non-line breakpoint from the tracking map.
-     */
-    private fun removeOtherBreakpoint(breakpoint: XBreakpoint<*>) {
-        val typeId = breakpoint.type.id
-        otherBreakpoints[typeId]?.let { counter ->
-            val count = counter.decrementAndGet()
-
-            if (count <= 0) {
-                otherBreakpoints.remove(typeId)
-            }
-
-            LOG.debug("Removed $typeId breakpoint. Remaining: $count")
-        }
     }
 
     /**
@@ -175,20 +141,43 @@ class BreakpointTrackingService(private val project: Project) {
     }
 
     /**
-     * Notifies UI listeners that breakpoints have changed.
+     * Removes a line breakpoint from the tracking map.
      */
-    private fun notifyUIOfChanges() {
-        project.messageBus.syncPublisher(BreakpointUIListener.TOPIC).breakpointsChanged()
+    private fun removeLineBreakpoint(breakpoint: XLineBreakpoint<*>) {
+        val fileUrl = breakpoint.fileUrl
+        if (fileUrl != null) {
+            val file = VirtualFileManager.getInstance().findFileByUrl(fileUrl)
+
+            if (file != null) {
+                val filePath = file.path
+                val line = breakpoint.line
+
+                lineBreakpoints[filePath]?.let { lines ->
+                    lines.remove(line)
+
+                    if (lines.isEmpty()) {
+                        lineBreakpoints.remove(filePath)
+                    }
+
+                    LOG.debug("Removed line breakpoint at $filePath:$line")
+                }
+            }
+        }
     }
 
     /**
-     * Returns the line breakpoint data.
-     *
-     * @return Map of file paths to lists of line numbers
+     * Removes a non-line breakpoint from the tracking map.
      */
-    fun getLineBreakpointData(): Map<String, List<Int>> {
-        return lineBreakpoints.mapValues { (_, lines) ->
-            lines.toList().sorted()
+    private fun removeOtherBreakpoint(breakpoint: XBreakpoint<*>) {
+        val typeId = breakpoint.type.id
+        otherBreakpoints[typeId]?.let { counter ->
+            val count = counter.decrementAndGet()
+
+            if (count <= 0) {
+                otherBreakpoints.remove(typeId)
+            }
+
+            LOG.debug("Removed $typeId breakpoint. Remaining: $count")
         }
     }
 
@@ -201,34 +190,6 @@ class BreakpointTrackingService(private val project: Project) {
             val filename = path.substringAfterLast('/')
             filename to lines.map { it + 1 }.sorted()
         }
-    }
-
-    /**
-     * Returns the line breakpoint data with file path and convenient display format.
-     * Converts 0-based line numbers to 1-based for display.
-     */
-    fun getLineBreakpointDetailedData(): Map<String, String> {
-        return lineBreakpoints.entries.associate { (path, lines) ->
-            val filename = path.substringAfterLast('/')
-
-            val sortedLines = lines.map { it + 1 }.sorted()
-            val linesText = when {
-                sortedLines.isEmpty() -> "No breakpoints"
-                sortedLines.size == 1 -> "Line: ${sortedLines[0]}"
-                else -> "Lines: ${sortedLines.joinToString(", ")}"
-            }
-
-            filename to linesText
-        }
-    }
-
-    /**
-     * Returns the non-line breakpoint type counts.
-     *
-     * @return Map of breakpoint type IDs to counts
-     */
-    fun getOtherBreakpointData(): Map<String, Int> {
-        return otherBreakpoints.mapValues { (_, counter) -> counter.get() }
     }
 
     /**
@@ -257,13 +218,6 @@ class BreakpointTrackingService(private val project: Project) {
      */
     fun getFileCount(): Int {
         return lineBreakpoints.size
-    }
-
-    /**
-     * Returns the number of different non-line breakpoint types.
-     */
-    fun getOtherBreakpointTypeCount(): Int {
-        return otherBreakpoints.size
     }
 
     /**

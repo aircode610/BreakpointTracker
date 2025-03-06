@@ -102,15 +102,14 @@
         </div>
 
         <script>
-            // Function to update the UI with new breakpoint data
             function updateBreakpoints(data) {
-                // Update statistics
+                // Counts
                 document.getElementById('total-count').textContent = data.totalCount;
                 document.getElementById('line-count').textContent = data.lineCount;
                 document.getElementById('file-count').textContent = data.fileCount;
                 document.getElementById('other-count').textContent = data.otherCount;
 
-                // Update line breakpoints
+                // Line breakpoints
                 const lineContainer = document.getElementById('line-breakpoints-container');
                 lineContainer.innerHTML = '';
 
@@ -135,7 +134,7 @@
                     }
                 }
 
-                // Update other breakpoints
+                // Other breakpoints
                 const otherContainer = document.getElementById('other-breakpoints-container');
                 otherContainer.innerHTML = '';
 

@@ -10,7 +10,7 @@ class BreakpointTrackerStartupActivity : ProjectActivity {
         // Create listener
         val listener = BreakpointChangeListener(project)
 
-        // Connecting to the message bus
+        // Connect to the message bus
         val messageBus = project.messageBus
         val connection = messageBus.connect()
 

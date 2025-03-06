@@ -1,0 +1,25 @@
+[versions]
+# Core dependencies
+kotlin = "1.9.25"
+intellij-gradle-plugin = "1.17.4"
+gson = "2.10.1"
+
+# Testing dependencies
+junit = "4.13.2"
+mockito-core = "5.10.0"
+mockito-kotlin = "5.2.1"
+assertj = "3.24.2"
+
+[libraries]
+# Main dependencies
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+
+# Testing dependencies
+junit = { module = "junit:junit", version.ref = "junit" }
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito-core" }
+mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockito-kotlin" }
+assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+intellij = { id = "org.jetbrains.intellij", version.ref = "intellij-gradle-plugin" }

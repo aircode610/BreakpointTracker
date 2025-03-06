@@ -1,7 +1,7 @@
 plugins {
     id("java")
-    id("org.jetbrains.kotlin.jvm") version "1.9.25"
-    id("org.jetbrains.intellij") version "1.17.4"
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.intellij)
 }
 
 group = "com.amirali.myplugin"
@@ -13,6 +13,12 @@ repositories {
 
 dependencies {
     implementation("com.google.code.gson:gson:2.10.1")
+
+    // Testing dependencies
+    testImplementation(libs.junit)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.assertj)
 }
 
 // Configure Gradle IntelliJ Plugin
@@ -58,5 +64,9 @@ tasks {
         from("src/main/resources") {
             include("**/*.*")
         }
+    }
+
+    test {
+        useJUnit()
     }
 }
